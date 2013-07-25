@@ -10,14 +10,14 @@ FIELD_DELIM = "|"
 ROW_DELIM = "\\n"
 HEADER = True
 CSV_BUFFER = "temp_csv_buffer.csv"
-CSV_FILE = "temp_res"
+CSV_FILE = "input/MITSUBISHI_Customer_RDR_for_Ocean.previous.csv"
 # CSV_FILE = raw_input("Enter the name or the complete path of the csv you want to import : ")
 DB_NAME = "TestDB"
-TB_NAME = "Testtb"
+TB_NAME = "MITSUBISHI_Customer_RDR_for_Ocean_previous"
 if CSV_FILE[-3:] != "csv":
 	CSV_FILE += ".csv"
 with open(CSV_FILE, "r") as infile:
-	reader = csv.reader(infile, delimiter="|")
+	reader = csv.reader(infile, delimiter=FIELD_DELIM)
 	for row in reader:
 		break
 	# DB_NAME = raw_input("Enter the DB name[for now the localhost is used as the server] : ")
@@ -42,8 +42,8 @@ with open(CSV_FILE, "r") as infile:
 	for col in row:
 		create_sql += col + " varchar(8000), "
 	create_sql = create_sql[:-2] + ")"
-	# print create_sql
-	# print create_sql
+	create_sql = create_sql.replace("Utility Opt In","Utility_Opt_In")
+	print create_sql
 	cursor.execute(create_sql)
 	conn.commit()
 	conn.close()
@@ -55,8 +55,9 @@ with open(CSV_FILE, "r") as infile:
 	open(CSV_BUFFER, "w").write(temp)
 
 	bcp_create_format = "bcp "+ DB_NAME + ".dbo." + TB_NAME + " format nul -T -c -t \"" + FIELD_DELIM + "\" -r \"" + ROW_DELIM + "\" -f " + FORMAT_BUFFER
-	print bcp_create_format
+	# print bcp_create_format
 	os.system(bcp_create_format)
+	os.system("sed 's/Utility Opt In/Utility_Opt_In/g' " + FORMAT_BUFFER)
 	bcp_import = "bcp " + DB_NAME + ".dbo." + TB_NAME + " in " + CSV_BUFFER + " -f " + FORMAT_BUFFER + " -T"
 	os.system(bcp_import)
 	remove_buffers = "rm " + CSV_BUFFER + " " + FORMAT_BUFFER
